@@ -9,6 +9,16 @@ export const userPool = new sst.aws.CognitoUserPool("UserPool", {
 
 export const userPoolClient = userPool.addClient("UserPoolClient");
 
+export function createAuthorizer(api: sst.aws.ApiGatewayV2) {
+  return api.addAuthorizer({
+    name: "myCognitoAuthorizer",
+    jwt: {
+      issuer: $interpolate`https://cognito-idp.${region}.amazonaws.com/${userPool.id}`,
+      audiences: [userPoolClient.id]
+    }
+  });
+}
+
 export const identityPool = new sst.aws.CognitoIdentityPool("IdentityPool", {
   userPools: [
     {
@@ -35,7 +45,7 @@ export const identityPool = new sst.aws.CognitoIdentityPool("IdentityPool", {
             ":",
             aws.getCallerIdentityOutput({}).accountId,
             ":",
-            api.nodes.api.id,
+            "*",
             "/*/*/*"
           ),
         ],
